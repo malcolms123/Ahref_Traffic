@@ -34,7 +34,7 @@ This script automates the process of collecting organic traffic data from Ahrefs
 1. Create a CSV file named `sample_sheet.csv` with at least two columns:
    - `URL`: containing the domains you want to check
    - `Traffic`: can be empty, will be filled by the script
-
+   - `Flag`: can be empty, will be filled by the script
 See `sample_sheet.csv` for an example.
 
 ## Running the Script
@@ -56,9 +56,8 @@ python ahrefs.py
 ## Notes
 
 - The script uses human-like typing patterns to avoid detection
-- Manual intervention may be required if Ahrefs shows captchas
-- Keep the browser window visible while the script runs
-- Don't minimize or switch tabs during execution
+- Do not exit the browser window while the script is running (you can minimize it)
+- Will flag domains showing organic traffic over 20,000
 
 ## Troubleshooting
 

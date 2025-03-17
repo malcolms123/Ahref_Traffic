@@ -100,7 +100,7 @@ def open_ahrefs():
             traffic = "Not Found"
         
         # Update the DataFrame with traffic and flag
-        domains_df = pd.read_csv('sample_sheet.csv', dtype={'Traffic': str})
+        domains_df = pd.read_csv('sample_sheet.csv', dtype={'Traffic': str, 'Flag': str})
             
         # Convert traffic to numeric value for comparison
         try:
@@ -111,10 +111,10 @@ def open_ahrefs():
                 numeric_traffic = float(traffic.replace('K', '')) * 1000
             else:
                 numeric_traffic = float(traffic)
-            should_flag = bool(numeric_traffic > 20000)
+            should_flag = "Flag" if numeric_traffic > 20000 else ""
         except (ValueError, AttributeError):
-            # If conversion fails (e.g., "Not Found"), set flag to True
-            should_flag = True
+            # If conversion fails (e.g., "Not Found"), set flag to "Flag"
+            should_flag = "Flag"
             
         # Update both traffic and flag in the DataFrame
         domains_df.loc[domains_df['URL'] == domain, 'Traffic'] = traffic
