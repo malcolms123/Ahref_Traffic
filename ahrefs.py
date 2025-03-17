@@ -13,7 +13,7 @@ def human_type(element, text):
     """Type like a human with random delays between characters"""
     for char in text:
         element.send_keys(char)
-        time.sleep(random.uniform(0.1, 0.3))
+        time.sleep(random.uniform(0.01, 0.05))
 
 def open_ahrefs():
     # Set up Chrome options
@@ -44,8 +44,14 @@ def open_ahrefs():
     
     domains = pd.read_csv('sample_sheet.csv')['URL'].tolist()
 
+    # Start timing the entire loop
+    total_start_time = time.time()
+    
     first = True
     for domain in domains:
+        # Start timing this iteration
+        iteration_start_time = time.time()
+        
         print(f"Processing {domain}")
         if first:
             driver.get(f'https://app.ahrefs.com/v2-site-explorer/overview?mode=subdomains&target={domain}')
@@ -62,7 +68,7 @@ def open_ahrefs():
             # Try multiple methods to clear the input
             # 1. Clear via JavaScript
             driver.execute_script("arguments[0].value = '';", search_input)
-            time.sleep(0.5)
+            time.sleep(0.15)
             
             # 2. Send backspace keys if there's still text
             current_value = search_input.get_attribute('value')
@@ -74,12 +80,12 @@ def open_ahrefs():
             human_type(search_input, domain)
             
             # Random pause before hitting enter
-            time.sleep(random.uniform(0.5, 1.5))
+            time.sleep(random.uniform(0.1, 1.0))
             search_input.send_keys(Keys.RETURN)
         
         try:
             # Look for the traffic value in the specific structure
-            traffic_element = WebDriverWait(driver, 30).until(
+            traffic_element = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((
                     By.XPATH, 
                     "//div[contains(@class, 'css-1iy025y-groupOrganicPaidSearchContent')]//div[.//div[contains(text(), 'Traffic')]]//a/span[contains(@class, 'css-1qasr9x')]"
@@ -93,13 +99,39 @@ def open_ahrefs():
             print(f"Error finding traffic element for {domain}")
             traffic = "Not Found"
         
-        # Update the traffic value in the DataFrame - specify dtype as string
+        # Update the DataFrame with traffic and flag
         domains_df = pd.read_csv('sample_sheet.csv', dtype={'Traffic': str})
+            
+        # Convert traffic to numeric value for comparison
+        try:
+            # Handle K (thousands) and M (millions) suffixes
+            if 'M' in traffic:
+                numeric_traffic = float(traffic.replace('M', '')) * 1000000
+            elif 'K' in traffic:
+                numeric_traffic = float(traffic.replace('K', '')) * 1000
+            else:
+                numeric_traffic = float(traffic)
+            should_flag = bool(numeric_traffic > 20000)
+        except (ValueError, AttributeError):
+            # If conversion fails (e.g., "Not Found"), set flag to True
+            should_flag = True
+            
+        # Update both traffic and flag in the DataFrame
         domains_df.loc[domains_df['URL'] == domain, 'Traffic'] = traffic
+        domains_df.loc[domains_df['URL'] == domain, 'Flag'] = should_flag
         domains_df.to_csv('sample_sheet.csv', index=False)
 
         # Random delay between requests
-        time.sleep(random.uniform(0.5, 5.0))
+        time.sleep(random.uniform(0.1, 0.5))
+
+        # Calculate and print iteration time
+        iteration_time = time.time() - iteration_start_time
+        print(f"Time taken for {domain}: {iteration_time:.2f} seconds")
+
+    # Calculate and print total time
+    total_time = time.time() - total_start_time
+    print(f"\nTotal execution time: {total_time:.2f} seconds")
+    print(f"Average time per domain: {(total_time/len(domains)):.2f} seconds")
 
     input("Press any key to close the browser...")
     driver.quit()
