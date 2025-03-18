@@ -85,7 +85,7 @@ def open_ahrefs():
         
         try:
             # Look for the traffic value in the specific structure
-            traffic_element = WebDriverWait(driver, 10).until(
+            traffic_element = WebDriverWait(driver, 30).until(
                 EC.presence_of_element_located((
                     By.XPATH, 
                     "//div[contains(@class, 'css-1iy025y-groupOrganicPaidSearchContent')]//div[.//div[contains(text(), 'Traffic')]]//a/span[contains(@class, 'css-1qasr9x')]"
